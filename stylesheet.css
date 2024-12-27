@@ -7,7 +7,7 @@ body {
 }
 
 .header {
-    background-image: linear-gradient(to right, rgba(29, 15, 11, 53), rgb(219, 8, 8));
+    background-image: linear-gradient(to right, rgba(29, 15, 11, 53), rgb(250, 28, 28));
     color: white;
     padding: 15px;
     text-align: center;
@@ -165,3 +165,42 @@ td {
         font-size: 14px;
     }
 }
+/* Ensure the table container is scrollable on smaller screens */
+#tableWrapper {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Ensure table has a minimum width for better viewing */
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    th, td {
+        font-size: 12px; /* Adjust font size for smaller screens */
+    }
+
+    table {
+        min-width: unset; /* Allow the table to shrink if needed */
+    }
+
+    .summary-section {
+        flex-direction: column; /* Stack summary cards vertically */
+        align-items: stretch;
+    }
+
+    .form-section input, .form-section button {
+        width: 100%;
+        font-size: 14px;
+    }
+}
+
