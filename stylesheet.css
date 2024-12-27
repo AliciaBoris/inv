@@ -77,12 +77,10 @@ body {
     margin-top: 20px;
     text-align: center;
     overflow-x: auto; /* Enable horizontal scrolling on small screens */
-}
-
-table {
     width: 100%;
     border-collapse: collapse;
 }
+
 
 table, th, td {
     border: 1px solid #ccc;
