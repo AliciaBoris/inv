@@ -323,13 +323,33 @@ function paginateTable() {
 }
 
 function triggerCamera() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = () => alert('Barcode scanning coming soon!');
-    input.click();
+    const scannerDiv = document.createElement("div");
+    scannerDiv.id = "qr-reader";
+    document.body.appendChild(scannerDiv);
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+
+    html5QrCode.start(
+        { facingMode: "environment" }, // Use the back camera
+        {
+            fps: 10, // Scans per second
+            qrbox: { width: 250, height: 250 }, // Scanner box dimensions
+        },
+        (decodedText) => {
+            alert(`Scanned Barcode: ${decodedText}`);
+            document.getElementById("barcodeInput").value = decodedText; // Autofill the barcode input field
+            html5QrCode.stop();
+            document.getElementById("qr-reader").remove(); // Remove the scanner div after scanning
+        },
+        (error) => {
+            console.warn(`Scanning error: ${error}`);
+        }
+    ).catch((err) => {
+        alert("Camera access denied or not available.");
+        console.error(err);
+    });
 }
+
 let salesTransactions = []; // To store all transactions
 
 function sellItem(button) {
@@ -452,3 +472,4 @@ function sendDailySalesReport() {
         alert(`Sales report sent to ${emailAddress} (This is a placeholder, integrate email API for real functionality).`);
     }
 }
+
