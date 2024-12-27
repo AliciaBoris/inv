@@ -1,0 +1,167 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+.header {
+    background-image: linear-gradient(to right, rgba(29, 15, 11, 53), rgb(219, 8, 8));
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    width: 90%, auto;
+    
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Summary Section */
+.summary-section {
+    display: flex;
+    justify-content: space-around;
+    width: 90%;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Ensure wrapping on smaller screens */
+}
+
+.summary-card {
+    background-color: #ffe8e8;
+    border: 2px solid;
+    color: #f4f4f9;
+    background-image: linear-gradient(to right, rgba(60, 25, 11, 13), rgb(219, 8, 8));
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    width: 30%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+    margin-bottom: 10px; /* Space between rows on smaller screens */
+}
+
+/* Form Section */
+.form-section {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-section input, .form-section button {
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-section button {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form-section button:hover {
+    background-color: #d64545;
+}
+
+/* Table Styles */
+#tableWrapper {
+    margin-top: 20px;
+    text-align: center;
+    overflow-x: auto; /* Enable horizontal scrolling on small screens */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #0a816d;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+}
+
+td {
+    padding: 10px;
+    text-align: center;
+    font-size: 12px; /* Adjust for better mobile viewing */
+}
+
+/* Pagination */
+#pagination {
+    margin: 20px 0;
+    text-align: center;
+}
+
+#pagination button {
+    margin: 0 5px;
+    padding: 8px 15px;
+    border: none;
+    background-color: #ff6b6b;
+    color: white;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#pagination button:hover {
+    background-color: #d64545;
+}
+
+/* Barcode Section */
+.barcode-section {
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+}
+
+.barcode-section button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    border: none;
+    color: white;
+    background-color: #ff6b6b;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.barcode-section button:hover {
+    background-color: #d64545;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .summary-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .summary-card {
+        width: 90%;
+    }
+
+    table th, table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .form-section input, .form-section button {
+        width: 100%;
+        font-size: 14px;
+    }
+}
