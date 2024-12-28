@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clairdot Inventory Management System</title>
     <link rel="stylesheet" href="stylesheet.css">
+    <!-- Include html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 </head>
 <body>
 
     <div class="header">
+        <img src="main clairdot logo.png" alt="Company Logo" class="logo">
         <h1>CLAIRDOT</h1>
-        <h1>INVENTORY MANAGEMENT SYSTEM</h1>
+        <h1>INVENTORY</h1>
+        <h1>MANAGEMENT SYSTEM</h1>
     </div>
 
     <div class="dashboard">
@@ -81,10 +85,11 @@
                 </thead>
                 <tbody id="itemTableBody">
                     <!-- Rows dynamically added here -->
+                    
                 </tbody>
             </table>
+            <div id="pagination"></div>
         </div>
-        <div id="pagination"></div>
 
         <div class="sales-report-section">
             <h3>Sales Management</h3>
@@ -92,9 +97,8 @@
             <button onclick="viewReceipt(prompt('Enter the transaction index:'))">View/Send Receipt</button>
         </div>
         
-        <!-- Script References -->
-        <script src="JsBarcode.all.min.js"></script>
-        <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+          <!-- Script References -->
+        <script src="JsBarcode.all.min.js"></script>        
         <script src="myscript.js"></script>
     
 </body>
