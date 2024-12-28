@@ -4,13 +4,6 @@ let totalQuantity = 0;
 let currentPage = 1;
 const rowsPerPage = 10;
 
-// Generate Barcodes as Images
-function generateBarcode(barcodeValue) {
-    const canvas = document.createElement('canvas');
-    JsBarcode(canvas, barcodeValue, { format: "CODE128", displayValue: false });
-    return canvas.toDataURL();
-}
-
 function paginateTable() {
     const rows = document.querySelectorAll('#itemTableBody tr');
     const totalPages = Math.ceil(rows.length / itemsPerPage);
@@ -29,6 +22,14 @@ function paginateTable() {
 function changePage(direction) {
     currentPage += direction;
     paginateTable();
+}
+
+
+// Generate Barcodes as Images
+function generateBarcode(barcodeValue) {
+    const canvas = document.createElement('canvas');
+    JsBarcode(canvas, barcodeValue, { format: "CODE128", displayValue: false });
+    return canvas.toDataURL();
 }
 
 
@@ -75,7 +76,7 @@ function addItem() {
     `;
 
     table.appendChild(row);
-    recalculateSummary();
+    updateSummary();
     paginateTable();
     clearForm();
 }
@@ -103,10 +104,22 @@ function sellItem(button) {
     totalProfit += profit;
     totalInventoryCost -= costPrice * quantityToSell;
 
-    
-    updateSummary();
-    
+    // Generate Sales Report
+    alert(`Sales Report:
+     Item: ${row.cells[0].textContent}
+     Quantity Sold: ${quantityToSell}
+     Total Profit: ₦${profit.toFixed(2)}`);
 
+    if (quantity - quantityToSell === 0) {
+        row.remove();
+    }
+
+    updateSummary();{
+        document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
+        document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
+        document.getElementById('totalQuantity').textContent = totalQuantity;
+    }
+    
     // Generate Receipt
     generateReceipt(row.cells[0].textContent, row.dataset.barcode, quantityToSell, profit);
 
@@ -115,7 +128,12 @@ function sellItem(button) {
         paginateTable();
     }
 
-    recalculateSummary();
+    function updateSummary() {
+        document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
+        document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
+        document.getElementById('totalQuantity').textContent = totalQuantity;
+    }
+ 
 }
 
 function updateItem(button) {
@@ -135,7 +153,12 @@ function updateItem(button) {
     row.cells[3].textContent = `₦${newSellingPrice.toFixed(2)}`;
     row.cells[4].textContent = newQuantity;
 
-    recalculateSummary();
+    function updateSummary() {
+        document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
+        document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
+        document.getElementById('totalQuantity').textContent = totalQuantity;
+    }
+    
 }
 
 function deleteItem(button) {
@@ -149,14 +172,15 @@ function deleteItem(button) {
 
     row.remove();
     paginateTable();
-    recalculateSummary();
+    updateSummary();
 }
 
-function recalculateSummary() {
+function updateSummary() {
     document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
     document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
     document.getElementById('totalQuantity').textContent = totalQuantity;
 }
+
 
 function paginateTable() {
     const rows = Array.from(document.querySelectorAll("#itemTableBody tr"));
@@ -308,19 +332,14 @@ function toggleTableVisibility() {
     tableWrapper.style.display = isVisible ? 'none' : 'block';
 }
 
-function recalculateSummary() {
+function updateSummary() {
     document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
     document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
     document.getElementById('totalQuantity').textContent = totalQuantity;
 }
 
-function paginateTable() {
-    const rows = Array.from(document.querySelectorAll("#itemTableBody tr"));
-    const maxRows = 10;
-    rows.forEach((row, index) => {
-        row.style.display = index >= (currentPage - 1) * maxRows && index < currentPage * maxRows ? "" : "none";
-    });
-}
+
+
 
 function triggerCamera() {
     const scannerDiv = document.createElement("div");
@@ -350,16 +369,15 @@ function triggerCamera() {
     });
 }
 
+
 let salesTransactions = []; // To store all transactions
 
 function sellItem(button) {
     const row = button.closest('tr');
-    const itemName = row.cells[0].textContent;
     const quantityCell = row.cells[4];
     const profitCell = row.cells[5];
     const costPrice = parseFloat(row.cells[2].textContent.replace('₦', ''));
     const sellingPrice = parseFloat(row.cells[3].textContent.replace('₦', ''));
-    const barcode = row.dataset.barcode;
     const quantity = parseInt(quantityCell.textContent);
 
     const quantityToSell = parseInt(prompt('Enter the number of items to sell:', '1'));
@@ -371,31 +389,36 @@ function sellItem(button) {
 
     const profit = (sellingPrice - costPrice) * quantityToSell;
 
+    // Update cell values and totals
     quantityCell.textContent = quantity - quantityToSell;
     profitCell.textContent = `₦${(parseFloat(profitCell.textContent.replace('₦', '')) + profit).toFixed(2)}`;
     totalQuantity -= quantityToSell;
     totalProfit += profit;
     totalInventoryCost -= costPrice * quantityToSell;
 
-    
-
-    // Add to sales transactions
-    const sale = {
-        itemName,
-        barcode,
-        quantitySold: quantityToSell,
-        profit,
-        date: new Date().toLocaleString(),
-    };
-    salesTransactions.push(sale);
+    // Generate Sales Report
+    alert(`Sales Report:
+Item: ${row.cells[0].textContent}
+Quantity Sold: ${quantityToSell}
+Total Profit: ₦${profit.toFixed(2)}`);
 
     if (quantity - quantityToSell === 0) {
-        row.remove();
-        paginateTable();
+        row.remove(); // Remove the row if quantity is zero
     }
 
-    recalculateSummary();
+    // Update summary and pagination
+    updateSummary();
+    paginateTable();
 }
+
+
+  
+    function updateSummary() {
+        document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
+        document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
+        document.getElementById('totalQuantity').textContent = totalQuantity;
+    }
+    
 
 // Function to View or Send Receipt for a Sale
 function viewReceipt(transactionIndex) {
