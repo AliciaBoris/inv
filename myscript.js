@@ -351,25 +351,31 @@ function triggerCamera() {
 
     const html5QrCode = new Html5Qrcode("qr-reader");
 
-    html5QrCode.start(
-        { facingMode: "environment" }, // Use the back camera
-        {
-            fps: 10, // Frames per second
-            qrbox: { width: 250, height: 250 }, // Scanner box dimensions
-        },
-        (decodedText) => {
-            alert(`Scanned Barcode: ${decodedText}`);
-            document.getElementById("barcodeInput").value = decodedText; // Autofill the barcode input
-            html5QrCode.stop();
-            scannerDiv.remove(); // Remove the scanner div after scanning
-        },
-        (error) => {
-            console.warn(`Scanning error: ${error}`);
-        }
-    ).catch((err) => {
-        alert("Camera access denied or not available.");
-        console.error(err);
-    });
+html5QrCode.start(
+    { facingMode: "environment" }, // Use the back camera
+    {
+        fps: 10, // Frames per second
+        qrbox: { width: 400, height: 400 }, // Larger scanning box
+        supportedFormats: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13
+        ] // Add supported formats
+    },
+    (decodedText) => {
+        alert(`Scanned Barcode: ${decodedText}`);
+        document.getElementById("barcodeInput").value = decodedText; // Autofill the barcode input
+        html5QrCode.stop();
+        document.getElementById("qr-reader").remove(); // Remove the scanner div after scanning
+    },
+    (error) => {
+        console.warn(`Scanning error: ${error}`);
+    }
+).catch((err) => {
+    alert("Camera access denied or not available.");
+    console.error(err);
+});
 }
 
 let salesTransactions = []; // To store all transactions
@@ -528,4 +534,3 @@ function sendDailySalesReport() {
         alert(`Sales report sent to ${emailAddress} (This is a placeholder, integrate email API for real functionality).`);
     }
 }
-
