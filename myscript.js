@@ -351,67 +351,86 @@ function triggerCamera() {
 
     const html5QrCode = new Html5Qrcode("qr-reader");
 
-html5QrCode.start(
-    { facingMode: "environment" }, // Use the back camera
-    {
-        fps: 10, // Frames per second
-        qrbox: { width: 400, height: 400 }, // Larger scanning box
-        supportedFormats: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.EAN_13
-        ] // Add supported formats
-    },
-    (decodedText) => {
-        alert(`Scanned Barcode: ${decodedText}`);
-        document.getElementById("barcodeInput").value = decodedText; // Autofill the barcode input
-        html5QrCode.stop();
-        document.getElementById("qr-reader").remove(); // Remove the scanner div after scanning
-    },
-    (error) => {
-        console.warn(`Scanning error: ${error}`);
-    }
-).catch((err) => {
-    alert("Camera access denied or not available.");
-    console.error(err);
-});
+    html5QrCode.start(
+        { facingMode: "environment" }, // Use the back camera
+        {
+            fps: 10, // Frames per second
+            qrbox: { width: 400, height: 400 }, // Scanning box dimensions
+            supportedFormats: [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+            ],
+        },
+        (decodedText) => {
+            alert(`Scanned Barcode: ${decodedText}`);
+            document.getElementById("barcodeInput").value = decodedText; // Autofill the barcode input
+            html5QrCode.stop();
+            scannerDiv.remove();
+
+            // Automatically call up the item and sell it
+            searchAndSellItem(decodedText);
+        },
+        (error) => {
+            console.warn(`Scanning error: ${error}`);
+        }
+    ).catch((err) => {
+        alert("Camera access denied or not available.");
+        console.error(err);
+    });
 }
 
-let salesTransactions = []; // To store all transactions
+function searchAndSellItem(barcode) {
+    const rows = document.querySelectorAll("#itemTableBody tr");
+    let found = false;
 
-function sellItem(button) {
-    const row = button.closest('tr');
-    const quantityCell = row.cells[4];
-    const profitCell = row.cells[5];
-    const costPrice = parseFloat(row.cells[2].textContent.replace('₦', ''));
-    const sellingPrice = parseFloat(row.cells[3].textContent.replace('₦', ''));
-    const quantity = parseInt(quantityCell.textContent);
+    rows.forEach((row) => {
+        const rowBarcode = row.cells[6]?.textContent.trim(); // Assuming barcode is in the 6th cell
+        if (rowBarcode === barcode) {
+            found = true;
 
-    const quantityToSell = parseInt(prompt('Enter the number of items to sell:', '1'));
+            // Extract item details
+            const itemName = row.cells[0].textContent;
+            const quantityCell = row.cells[4];
+            const profitCell = row.cells[5];
+            const costPrice = parseFloat(row.cells[2].textContent.replace('₦', ''));
+            const sellingPrice = parseFloat(row.cells[3].textContent.replace('₦', ''));
+            const quantity = parseInt(quantityCell.textContent);
 
-    if (isNaN(quantityToSell) || quantityToSell <= 0 || quantityToSell > quantity) {
-        alert('Invalid quantity entered.');
-        return;
-    }
+            // Prompt for quantity to sell
+            const quantityToSell = parseInt(prompt(`Enter the quantity to sell for ${itemName}:`, '1'));
+            if (isNaN(quantityToSell) || quantityToSell <= 0 || quantityToSell > quantity) {
+                alert('Invalid quantity entered.');
+                return;
+            }
 
-    const profit = (sellingPrice - costPrice) * quantityToSell;
+            // Update the inventory
+            const profit = (sellingPrice - costPrice) * quantityToSell;
+            quantityCell.textContent = quantity - quantityToSell;
+            profitCell.textContent = `₦${(parseFloat(profitCell.textContent.replace('₦', '')) + profit).toFixed(2)}`;
+            totalQuantity -= quantityToSell;
+            totalProfit += profit;
+            totalInventoryCost -= costPrice * quantityToSell;
 
-    // Update cell values and totals
-    quantityCell.textContent = quantity - quantityToSell;
-    profitCell.textContent = `₦${(parseFloat(profitCell.textContent.replace('₦', '')) + profit).toFixed(2)}`;
-    totalQuantity -= quantityToSell;
-    totalProfit += profit;
-    totalInventoryCost -= costPrice * quantityToSell;
-
-    // Generate Sales Report
-    alert(`Sales Report:
-Item: ${row.cells[0].textContent}
+            // Generate a sales report
+            alert(`Sales Report:
+Item: ${itemName}
 Quantity Sold: ${quantityToSell}
 Total Profit: ₦${profit.toFixed(2)}`);
 
-    if (quantity - quantityToSell === 0) {
-        row.remove(); // Remove the row if quantity is zero
+            // If quantity becomes 0, remove the row
+            if (quantity - quantityToSell === 0) {
+                row.remove();
+            }
+
+            // Update the summary
+            updateSummary();
+        }
+    });
+
+    if (!found) {
+        alert('Item not found in inventory.');
     }
 
     // Update summary and pagination
