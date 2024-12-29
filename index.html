@@ -83,12 +83,14 @@
         <div class="sales-report-section">
             <h3>Sales Management</h3>
             <button onclick="sendDailySalesReport()">Send Daily Sales Report</button>
-            <button onclick="viewReceipt(prompt('Enter the transaction index:'))">View/Send Receipt</button>
+            <button onclick="viewReceiptWithIndex()">View/Send Receipt</button>
+ 
         </div>
     </div>
 
     <!-- Script References -->
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    
+    <script src="./qrScript.js"></script>
     <script src="JsBarcode.all.min.js"></script>
     <script src="myscript.js"></script>
 </body>
