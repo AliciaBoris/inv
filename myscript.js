@@ -1,3 +1,4 @@
+
 let totalProfit = 0;
 let totalInventoryCost = 0;
 let totalQuantity = 0;
@@ -422,10 +423,16 @@ Total Profit: ₦${profit.toFixed(2)}`);
     
 
 // Function to View or Send Receipt for a Sale
-function viewReceipt(transactionIndex) {
+function viewReceipt() {
+    const transactionIndex = parseInt(prompt("Enter the transaction index (e.g., 0 for the first transaction):"));
+    if (isNaN(transactionIndex)) {
+        alert("Invalid input. Please enter a number.");
+        return;
+    }
+
     const sale = salesTransactions[transactionIndex];
     if (!sale) {
-        alert('Transaction not found.');
+        alert('Transaction not found. Please ensure the index is correct.');
         return;
     }
 
@@ -448,13 +455,38 @@ function viewReceipt(transactionIndex) {
         </html>
     `);
     receiptWindow.document.close();
+}
+
+function listTransactions() {
+    if (salesTransactions.length === 0) {
+        alert("No transactions found.");
+        return;
+    }
+
+    let transactionList = "Available Transactions:\n";
+    salesTransactions.forEach((sale, index) => {
+        transactionList += `Index ${index}: ${sale.itemName}, Date: ${sale.date}\n`;
+    });
+
+    alert(transactionList);
+}
+
+function viewReceiptWithIndex() {
+    listTransactions();
+    viewReceipt();
+    const salesTransactions = [
+        { itemName: "Product A", barcode: "12345", quantitySold: 2, profit: 100, date: "2024-12-26 10:00:00" },
+        { itemName: "Product B", barcode: "67890", quantitySold: 1, profit: 200, date: "2024-12-26 11:00:00" }
+    ];
+    
+}
+
 
     // Send via email placeholder
     const emailAddress = prompt("Enter an email address to send this receipt:");
     if (emailAddress) {
         alert(`Receipt sent to ${emailAddress} (This is a placeholder, integrate email API for real functionality).`);
     }
-}
 
 // Function to Send Daily Sales Report via Email
 function sendDailySalesReport() {
@@ -496,3 +528,4 @@ function sendDailySalesReport() {
         alert(`Sales report sent to ${emailAddress} (This is a placeholder, integrate email API for real functionality).`);
     }
 }
+
