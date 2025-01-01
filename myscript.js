@@ -1,4 +1,3 @@
-
 let totalProfit = 0;
 let totalInventoryCost = 0;
 let totalQuantity = 0;
@@ -26,35 +25,127 @@ function changePage(direction) {
 }
 
 
-// Generate Barcodes as Images
-function generateBarcode(barcodeValue) {
-    const canvas = document.createElement('canvas');
-    JsBarcode(canvas, barcodeValue, { format: "CODE128", displayValue: false });
-    return canvas.toDataURL();
+// Function to generate QR codes for each item
+function generateQrCode(qrCodeText, callback) {
+    const qrCanvas = document.createElement("canvas"); // Create a canvas element
+
+    // Generate the QR Code and render it on the canvas
+    QRCode.toCanvas(qrCanvas, qrCodeText, { width: 100, height: 100 }, (error) => {
+        if (error) {
+            console.error("QR Code generation error:", error);
+            return;
+        }
+
+        // Execute the callback with the generated QR Code canvas
+        callback(qrCanvas);
+    });
 }
 
+// Function to print all QR codes
+function printQrCodes() {
+    const qrWindow = window.open("", "_blank");
 
+    qrWindow.document.write(`
+        <html>
+        <head>
+            <title>Print QR Codes</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                }
+                .qr-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    margin-top: 20px;
+                }
+                .qr-container div {
+                    margin: 15px;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Inventory QR Codes</h1>
+            <div class="qr-container" id="qrContainer"></div>
+        </body>
+        </html>
+    `);
+
+    const qrContainer = qrWindow.document.getElementById("qrContainer");
+
+    inventory.forEach(item => {
+        const qrCode = generateQrCode(item);
+        qrContainer.appendChild(qrCode);
+    });
+
+    qrWindow.document.close();
+    qrWindow.focus();
+
+    setTimeout(() => {
+        qrWindow.print();
+        qrWindow.close();
+    }, 1000);
+}
+
+// Replace barcode generation with QR code generation in the addItem function
 function addItem() {
-    const itemName = document.getElementById('itemName').value;
-    const itemCostPrice = parseFloat(document.getElementById('itemCostPrice').value);
-    const itemSellingPrice = parseFloat(document.getElementById('itemSellingPrice').value);
-    const itemQuantity = parseInt(document.getElementById('itemQuantity').value);
+    const itemName = document.getElementById("itemName").value;
+    const itemCostPrice = parseFloat(document.getElementById("itemCostPrice").value);
+    const itemSellingPrice = parseFloat(document.getElementById("itemSellingPrice").value);
+    const itemQuantity = parseInt(document.getElementById("itemQuantity").value);
+    const barcode = generateUniquearcode(); // Assuming this function exists
 
     if (!itemName || isNaN(itemCostPrice) || isNaN(itemSellingPrice) || isNaN(itemQuantity)) {
-        alert('Please fill out all fields.');
+        alert("Please fill in all fields correctly.");
+        return;
+    }
+
+    const item = {
+        name: itemName,
+        costPrice: itemCostPrice,
+        sellingPrice: itemSellingPrice,
+        quantity: itemQuantity,
+        barcode: qrcode,
+    };
+
+    inventory.push(item);
+    updateTable();
+    updateSummary();
+
+    // Optionally generate a QR code for the new item
+    alert(`Item added: ${itemName} with QR code: ${barcode}`);
+}
+
+// Ensure searchByBarcode also works with QR codes
+function searchByQrCode() {
+    const qrCodeInput = document.getElementById("barcodeInput").value;
+    const item = inventory.find(item => item.barcode === qrCodeInput);
+
+    if (!item) {
+        alert("No matching item found for this QR code.");
+        return;
+    }
+
+    alert(`Item Found: \nName: ${item.name}\nBarcode: ${item.barcode}\nQuantity: ${item.quantity}`);
+}
+
+function addItem() {
+    const itemName = document.getElementById("itemName").value;
+    const itemCostPrice = parseFloat(document.getElementById("itemCostPrice").value);
+    const itemSellingPrice = parseFloat(document.getElementById("itemSellingPrice").value);
+    const itemQuantity = parseInt(document.getElementById("itemQuantity").value);
+
+    if (!itemName || isNaN(itemCostPrice) || isNaN(itemSellingPrice) || isNaN(itemQuantity)) {
+        alert("Please fill out all fields.");
         return;
     }
 
     const currentDateTime = new Date().toLocaleString();
-    const barcode = Date.now().toString(); // Unique barcode
-    const barcodeImage = generateBarcode(barcode);
+    const qrCodeText = `${Date.now()}-${itemName}`; // Generate unique QR code text
 
-    totalQuantity += itemQuantity;
-    totalInventoryCost += itemCostPrice * itemQuantity;
-
-    const table = document.getElementById('itemTableBody');
-    const row = document.createElement('tr');
-    row.dataset.barcode = barcode;
+    const table = document.getElementById("itemTableBody");
+    const row = document.createElement("tr");
 
     row.innerHTML = `
         <td>${itemName}</td>
@@ -63,12 +154,7 @@ function addItem() {
         <td>₦${itemSellingPrice.toFixed(2)}</td>
         <td>${itemQuantity}</td>
         <td>₦0.00</td>
-        <td>
-            <div>
-                <img src="${barcodeImage}" alt="Barcode" />
-                <p>${itemName}</p>
-            </div>
-        </td>
+        <td>${qrCodeText}</td> <!-- Store QR code text here -->
         <td>
             <button onclick="sellItem(this)">Sell</button>
             <button onclick="updateItem(this)">Update</button>
@@ -76,9 +162,24 @@ function addItem() {
         </td>
     `;
 
+    // Generate and append QR code
+    const qrCodeCell = row.cells[6];
+    const qrCanvas = document.createElement("canvas");
+    QRCode.toCanvas(qrCanvas, qrCodeText, { width: 100, height: 100 }, (error) => {
+        if (error) {
+            console.error("QR Code generation error:", error);
+        }
+    });
+    qrCodeCell.appendChild(qrCanvas);
+
     table.appendChild(row);
+
+    // Update summary
+    totalQuantity += itemQuantity;
+    totalInventoryCost += itemCostPrice * itemQuantity;
     updateSummary();
-    paginateTable();
+
+    // Clear the form
     clearForm();
 }
 
@@ -236,8 +337,6 @@ function searchItems() {
     document.getElementById("searchInput").value = "";
 }
 
-
-
 function goToDate() {
     const dateInput = document.getElementById("dateInput").value;
     if (!dateInput) {
@@ -267,44 +366,104 @@ function goToDate() {
     document.getElementById("dateInput").value = "";
 }
 
+function printQrCodes() {
+    const startRange = parseInt(prompt("Enter the start index of items to print (e.g., 1 for the first item):"));
+    const endRange = parseInt(prompt("Enter the end index of items to print (e.g., 10 for the 10th item):"));
 
-function printBarcode(button) {
-    if (!button) {
-        alert("Button reference not provided for printing barcode.");
+    if (isNaN(startRange) || isNaN(endRange) || startRange < 1 || endRange < startRange) {
+        alert("Invalid range. Please enter valid start and end indices.");
         return;
     }
 
-    const row = button.closest('tr');
-    if (!row) {
-        alert("Row could not be found.");
+    const rows = Array.from(document.querySelectorAll("#itemTableBody tr"));
+    if (rows.length === 0) {
+        alert("No items available to print QR codes.");
         return;
     }
 
-    const barcodeDiv = row.cells[6]?.innerHTML; // Ensure `cells[6]` exists.
-    if (!barcodeDiv) {
-        alert("Barcode information is missing.");
+    if (startRange > rows.length || endRange > rows.length) {
+        alert("Specified range exceeds the number of available items.");
         return;
     }
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
+    const qrWindow = window.open("", "_blank");
+
+    if (!qrWindow || qrWindow.closed || typeof qrWindow.closed === "undefined") {
+        alert("Popup blocked! Please allow popups for this website.");
+        return;
+    }
+
+    qrWindow.document.write(`
         <html>
         <head>
-            <title>Print Barcode</title>
+            <title>Print QR Codes</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+                .qr-container { 
+                    display: flex; 
+                    flex-wrap: wrap; 
+                    justify-content: center; 
+                    gap: 20px; 
+                }
+                .qr-code { 
+                    margin: 10px; 
+                    text-align: center; 
+                }
+                .qr-code canvas { 
+                    display: block; 
+                    margin: 0 auto; 
+                }
+                .qr-code p { 
+                    margin: 5px 0 0; 
+                    font-size: 14px; 
+                }
+            </style>
         </head>
         <body>
-            <h2>Item Barcode</h2>
-            <div>${barcodeDiv}</div>
+            <h1>QR Codes</h1>
+            <div class="qr-container" id="qrContainer"></div>
         </body>
         </html>
     `);
-    printWindow.document.close();
+
+    const qrContainer = qrWindow.document.getElementById("qrContainer");
+
+    rows.slice(startRange - 1, endRange).forEach((row) => {
+        const itemName = row.cells[0].textContent; // Item name
+        const qrCodeText = row.cells[6]?.textContent.trim(); // Retrieve QR code text
+    
+        if (!qrCodeText) {
+            console.error(`Missing QR Code for row ${row.rowIndex}`);
+            return;
+        }
+    
+        const qrDiv = document.createElement("div");
+        qrDiv.className = "qr-code";
+    
+        const qrCanvas = document.createElement("canvas");
+        QRCode.toCanvas(qrCanvas, qrCodeText, { width: 100, height: 100 }, (error) => {
+            if (error) {
+                console.error("QR Code generation error:", error);
+            }
+        });
+    
+        const label = document.createElement("p");
+        label.textContent = itemName;
+    
+        qrDiv.appendChild(qrCanvas);
+        qrDiv.appendChild(label);
+        qrContainer.appendChild(qrDiv);
+    });
+    
+
+    qrWindow.document.close();
+    qrWindow.focus();
+
     setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
+        qrWindow.print();
+        qrWindow.close();
     }, 1000);
 }
-
 
 function generateReceipt(itemName, barcode, quantitySold, profit) {
     const receiptWindow = window.open("", "_blank");
@@ -316,7 +475,7 @@ function generateReceipt(itemName, barcode, quantitySold, profit) {
         <body>
             <h1>Receipt</h1>
             <p>Item: ${itemName}</p>
-            <p>Barcode: ${barcode}</p>
+            <p>: ${barcode}</p>
             <p>Quantity Sold: ${quantitySold}</p>
             <p>Profit: ₦${profit.toFixed(2)}</p>
             <p>Date: ${new Date().toLocaleString()}</p>
@@ -338,9 +497,6 @@ function updateSummary() {
     document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
     document.getElementById('totalQuantity').textContent = totalQuantity;
 }
-
-
-
 
 function triggerCamera() {
     const scannerDiv = document.getElementById("qr-reader") || document.createElement("div");
