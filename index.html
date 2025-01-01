@@ -6,6 +6,7 @@
     <title>Clairdot Inventory Management System</title>
     <link rel="stylesheet" href="stylesheet.css">
     <!-- Include html5-qrcode library -->
+     <!-- Include qrcode library -->
     
 </head>
 <body>
@@ -50,13 +51,16 @@
             <button class="button info" onclick="goToDate()">Go to Date</button>
         </div>
 
-        <!-- Barcode Operations -->
-        <div id="barcodeScanner">
-            <h3>Barcode Operations</h3>
-            <input id="barcodeInput" type="text" placeholder="Enter or scan barcode" />
-            <button onclick="triggerCamera()">Open Camera to Scan Barcode</button>
-        </div>
-        
+       <!-- QR Code Scanner Section -->
+    <div id="barcodeScanner">
+        <h3>QR Code Scanner</h3>
+        <button onclick="triggerCamera()">Open Camera to Scan QR Code</button>
+        <input id="barcodeInput" type="text" placeholder="Enter or scan QR code" oninput="searchByQrCode()" />
+    </div>
+            <div class="qr-code-actions">
+                <button onclick="printQrCodes()">Print QR Codes</button>
+            </div>
+            
         <!-- Inventory Table -->
         <div id="tableWrapper">
             <table>
@@ -89,9 +93,9 @@
     </div>
 
     <!-- Script References -->
-    
+     
     <script src="./qrscript.js"></script>
-    <script src="JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="myscript.js"></script>
 </body>
 </html>
