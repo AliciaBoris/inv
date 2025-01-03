@@ -1,8 +1,27 @@
+let inventory = []; // Initialize as an empty array
 let totalProfit = 0;
 let totalInventoryCost = 0;
 let totalQuantity = 0;
 let currentPage = 1;
 const rowsPerPage = 10;
+
+function fetchInventory() {
+    fetch("http://localhost:3000/api/items")
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            inventory = data;
+            console.log("Inventory fetched successfully:", inventory);
+        })
+        .catch((error) => {
+            console.error("Error fetching inventory:", error);
+            alert("Failed to load inventory. Please check your backend.");
+        });
+}
 
 function paginateTable() {
     const rows = document.querySelectorAll('#itemTableBody tr');
@@ -91,23 +110,39 @@ function printQrCodes() {
 // Replace barcode generation with QR code generation in the addItem function
 function addItem() {
     const itemName = document.getElementById("itemName").value;
-    const itemCostPrice = parseFloat(document.getElementById("itemCostPrice").value);
-    const itemSellingPrice = parseFloat(document.getElementById("itemSellingPrice").value);
-    const itemQuantity = parseInt(document.getElementById("itemQuantity").value);
-    const barcode = generateUniquearcode(); // Assuming this function exists
+    const addedDateTime = new Date().toISOString().slice(0, 19).replace("T", " "); // Format for MySQL
+    const costPrice = parseFloat(document.getElementById("itemCostPrice").value);
+    const sellingPrice = parseFloat(document.getElementById("itemSellingPrice").value);
+    const quantity = parseInt(document.getElementById("itemQuantity").value);
+    const barcode = document.getElementById("barcodeInput").value.trim(); // Trim to remove spaces
 
-    if (!itemName || isNaN(itemCostPrice) || isNaN(itemSellingPrice) || isNaN(itemQuantity)) {
-        alert("Please fill in all fields correctly.");
+    if (!barcode) {
+        alert("⚠ Please scan or enter a barcode.");
         return;
     }
 
-    const item = {
-        name: itemName,
-        costPrice: itemCostPrice,
-        sellingPrice: itemSellingPrice,
-        quantity: itemQuantity,
-        barcode: qrcode,
-    };
+    fetch("http://localhost:3000/api/add-item", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            itemName,
+            addedDateTime,
+            costPrice,
+            sellingPrice,
+            quantity,
+            barcode,
+        }),
+    })
+        .then((response) => response.text())
+        .then((message) => {
+            alert(message);
+        })
+        .catch((error) => {
+            console.error("Error adding item:", error);
+            alert("Failed to add item.");
+        });
 
     inventory.push(item);
     updateTable();
@@ -119,17 +154,24 @@ function addItem() {
 
 // Ensure searchByBarcode also works with QR codes
 function searchByQrCode() {
-    const qrCodeInput = document.getElementById("barcodeInput").value;
-    const item = inventory.find(item => item.barcode === qrCodeInput);
+    const qrCode = document.getElementById("barcodeInput").value.trim();
 
-    if (!item) {
-        alert("No matching item found for this QR code.");
+    if (!qrCode) {
+        alert("Please enter a QR code to search.");
         return;
     }
 
-    alert(`Item Found: \nName: ${item.name}\nBarcode: ${item.barcode}\nQuantity: ${item.quantity}`);
+    const item = inventory.find((i) => i.Barcode === qrCode); // Match QR code
+
+    if (!item) {
+        alert("Item not found.");
+        return;
+    }
+
+    alert(`Item Found: ${item.ItemName}, Quantity: ${item.Quantity}`);
 }
 
+// Function to add items with properly formatted QR Code in the table
 function addItem() {
     const itemName = document.getElementById("itemName").value;
     const itemCostPrice = parseFloat(document.getElementById("itemCostPrice").value);
@@ -154,7 +196,7 @@ function addItem() {
         <td>₦${itemSellingPrice.toFixed(2)}</td>
         <td>${itemQuantity}</td>
         <td>₦0.00</td>
-        <td>${qrCodeText}</td> <!-- Store QR code text here -->
+        <td></td>
         <td>
             <button onclick="sellItem(this)">Sell</button>
             <button onclick="updateItem(this)">Update</button>
@@ -162,15 +204,23 @@ function addItem() {
         </td>
     `;
 
-    // Generate and append QR code
+    // Generate and append QR code below the QR Code text and item name
     const qrCodeCell = row.cells[6];
     const qrCanvas = document.createElement("canvas");
+    const labelName = document.createElement("p");
+    const labelCode = document.createElement("p");
+
     QRCode.toCanvas(qrCanvas, qrCodeText, { width: 100, height: 100 }, (error) => {
         if (error) {
             console.error("QR Code generation error:", error);
         }
     });
+
+    labelCode.textContent = qrCodeText;
+
     qrCodeCell.appendChild(qrCanvas);
+    qrCodeCell.appendChild(labelName);
+    qrCodeCell.appendChild(labelCode);
 
     table.appendChild(row);
 
@@ -181,30 +231,36 @@ function addItem() {
 
     // Clear the form
     clearForm();
+
 }
 
 function sellItem(button) {
-    const row = button.closest('tr');
+    const row = button.parentElement.parentElement;
+    const itemName = row.cells[0].textContent;
+    const sellingPrice = parseFloat(row.cells[3].textContent.replace('₦', ''));
+    const costPrice = parseFloat(row.cells[2].textContent.replace('₦', ''));
     const quantityCell = row.cells[4];
     const profitCell = row.cells[5];
-    const costPrice = parseFloat(row.cells[2].textContent.replace('₦', ''));
-    const sellingPrice = parseFloat(row.cells[3].textContent.replace('₦', ''));
-    const quantity = parseInt(quantityCell.textContent);
 
-    const quantityToSell = parseInt(prompt('Enter the number of items to sell:', '1'));
+    let quantity = parseInt(quantityCell.textContent);
+    if (quantity === 0) {
+        alert("No more items left to sell.");
+        return;
+    }
 
+    const quantityToSell = parseInt(prompt(`Enter quantity to sell for ${itemName} (Available: ${quantity}):`));
     if (isNaN(quantityToSell) || quantityToSell <= 0 || quantityToSell > quantity) {
-        alert('Invalid quantity entered.');
+        alert("Invalid quantity.");
         return;
     }
 
     const profit = (sellingPrice - costPrice) * quantityToSell;
-
-    quantityCell.textContent = quantity - quantityToSell;
+    quantity -= quantityToSell;
+    quantityCell.textContent = quantity;
     profitCell.textContent = `₦${(parseFloat(profitCell.textContent.replace('₦', '')) + profit).toFixed(2)}`;
+
     totalQuantity -= quantityToSell;
     totalProfit += profit;
-    totalInventoryCost -= costPrice * quantityToSell;
 
     // Generate Sales Report
     alert(`Sales Report:
@@ -220,23 +276,85 @@ function sellItem(button) {
         document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
         document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
         document.getElementById('totalQuantity').textContent = totalQuantity;
+        fetch("http://localhost:3000/api/add-item", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                itemName,
+                costPrice,
+                sellingPrice,
+                quantity,
+            }),
+        })
+            .then((response) => response.text())
+            .then((message) => {
+                alert(message);
+            })
+            .catch((error) => {
+                console.error("Error adding item:", error);
+                alert("Failed to add item.");
+            });
     }
     
-    // Generate Receipt
-    generateReceipt(row.cells[0].textContent, row.dataset.barcode, quantityToSell, profit);
+    // Optionally, generate receipt only on request
+    const generateReceipt = confirm("Do you want to view the receipt for this sale?");
+    if (generateReceipt) {
+        viewReceiptForSale(itemName, quantityToSell, profit);
+    }
 
-    if (quantity - quantityToSell === 0) {
+    if (quantity === 0) {
         row.remove();
-        paginateTable();
     }
-
-    function updateSummary() {
-        document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
-        document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
-        document.getElementById('totalQuantity').textContent = totalQuantity;
-    }
- 
 }
+function saveSale(itemName, quantity, totalProfit) {
+    fetch("http://localhost:3000/api/sales", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            item_name: itemName,
+            quantity: quantity,
+            total_profit: totalProfit,
+        }),
+    })
+        .then((response) => {
+            if (response.ok) {
+                alert("Sale saved successfully.");
+            } else {
+                response.text().then((text) => alert("Error: " + text));
+            }
+        })
+        .catch((error) => {
+            console.error("Fetch error:", error);
+            alert("Failed to save sale.");
+        });
+}
+
+// Function to view receipt for a specific sale
+function viewReceiptForSale(itemName, quantitySold, profit) {
+    const receiptContent = `
+        <h1>Receipt</h1>
+        <p>Item: ${itemName}</p>
+        <p>Quantity Sold: ${quantitySold}</p>
+        <p>Total Profit: ₦${profit.toFixed(2)}</p>
+        <p>Date: ${new Date().toLocaleString()}</p>
+    `;
+
+    const receiptWindow = window.open("", "_blank");
+    receiptWindow.document.write(`
+        <html>
+        <head>
+            <title>Receipt</title>
+        </head>
+        <body>${receiptContent}</body>
+        </html>
+    `);
+    receiptWindow.document.close();
+}
+
 
 function updateItem(button) {
     const row = button.closest('tr');
@@ -594,15 +712,12 @@ Total Profit: ₦${profit.toFixed(2)}`);
     paginateTable();
 }
 
-
-  
     function updateSummary() {
         document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
         document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
         document.getElementById('totalQuantity').textContent = totalQuantity;
     }
     
-
 // Function to View or Send Receipt for a Sale
 function viewReceipt() {
     const transactionIndex = parseInt(prompt("Enter the transaction index (e.g., 0 for the first transaction):"));
@@ -661,8 +776,6 @@ function viewReceiptWithIndex() {
     ];
     
 }
-
-
     // Send via email placeholder
     const emailAddress = prompt("Enter an email address to send this receipt:");
     if (emailAddress) {
