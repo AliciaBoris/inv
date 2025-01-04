@@ -1,0 +1,15 @@
+let mysql = require('mysql');
+
+let connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_root,
+  password: process.env.DB_#85CHigozie,
+  database: process.env.DB_ClairdotDB,
+});
+
+connection.connect((err) => {
+  if (err) return console.error(err.message);
+
+  console.log('Connected to the MySQL server.');
+});

@@ -1,0 +1,217 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+.header {
+    color: rgb(12, 0, 0);
+    padding: 15px;
+    text-align: left;
+    font-size: 12px;
+    width: 50%;
+    border-radius: 5%;
+    display: flex;
+    align-items: center;
+    
+}
+
+hi {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.logo {
+    height: 50px; /* Adjust height as needed */
+    width: auto; /* Maintain aspect ratio */
+    margin-right: 15px; /* Space between logo and text */
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Summary Section */
+.summary-section {
+    display: flex;
+    justify-content: space-around;
+    width: 90%;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Ensure wrapping on smaller screens */
+}
+
+.summary-card {
+    background-color: #ffe8e8;
+    border: 2px solid;
+    color: #f4f4f9;
+    background-image: linear-gradient(to right, rgba(60, 25, 11, 13), rgb(219, 8, 8));
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    width: 30%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+    margin-bottom: 10px; /* Space between rows on smaller screens */
+}
+
+/* Form Section */
+.form-section {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-section input, .form-section button {
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-section button {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.form-section button:hover {
+    background-color: #d64545;
+}
+
+#barcodeScanner {
+    margin-bottom: 20px;
+}
+
+#barcodeScanner input {
+    width: 250px;
+    padding: 5px;
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+#barcodeScanner button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+}
+
+/* Table Styles */
+#tableWrapper {
+    margin-top: 20px;
+    text-align: center;
+    overflow-x: auto; /* Enable horizontal scrolling on small screens */
+    width: 100%;
+    border-collapse: collapse;
+}
+
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #0a816d;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+}
+
+td {
+    padding: 10px;
+    text-align: center;
+    font-size: 12px; /* Adjust for better mobile viewing */
+}
+
+#pagination {
+    margin: 20px 0;
+    text-align: center;
+}
+
+#pagination button {
+    margin: 0 5px;
+    padding: 8px 15px;
+    border: none;
+    background-color: #ff6b6b;
+    color: white;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#pagination span {
+    margin: 0 10px;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .summary-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .summary-card {
+        width: 90%;
+    }
+
+    table th, table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .form-section input, .form-section button {
+        width: 100%;
+        font-size: 14px;
+    }
+}
+/* Ensure the table container is scrollable on smaller screens */
+#tableWrapper {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Ensure table has a minimum width for better viewing */
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    th, td {
+        font-size: 12px; /* Adjust font size for smaller screens */
+    }
+
+    table {
+        min-width: unset; /* Allow the table to shrink if needed */
+    }
+
+    .summary-section {
+        flex-direction: column; /* Stack summary cards vertically */
+        align-items: stretch;
+    }
+
+    .form-section input, .form-section button {
+        width: 100%;
+        font-size: 14px;
+    }
+}

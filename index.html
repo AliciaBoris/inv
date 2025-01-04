@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clairdot Inventory Management System</title>
+    <link rel="stylesheet" href="stylesheet.css">
+    <!-- Include html5-qrcode library -->
+     <!-- Include qrcode library -->
+    
+</head>
+<body>
+
+    <div class="header">
+        <img src="main clairdot logo.png" alt="Company Logo" class="logo">
+        <h1>CLAIRDOT Inventory Management System</h1>
+    </div>
+
+    <div class="dashboard">
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-card">
+                <h3>Total Profit</h3>
+                <p id="totalProfit">₦0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Inventory Cost</h3>
+                <p id="totalInventoryCost">₦0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Quantity</h3>
+                <p id="totalQuantity">0</p>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="form-section">
+            <form id="itemForm">
+                <input type="text" id="itemName" placeholder="Item Name">
+                <input type="number" id="itemCostPrice" placeholder="Cost Price">
+                <input type="number" id="itemSellingPrice" placeholder="Selling Price">
+                <input type="number" id="itemQuantity" placeholder="Quantity">
+                
+                <!-- QR Code Input Field -->
+                <input type="text" id="barcodeInput" placeholder="Scan or Generate QR Code" readonly>
+            
+                <!-- Generate QR Code Button -->
+                <button type="button" onclick="generateAndDisplayQrCode()">Generate QR Code</button>
+                
+                <!-- Add Item Button -->
+                <button type="button" onclick="addItem()">Add Item</button>
+            </form>
+            
+                        
+        </div>
+
+        <!-- Search and Navigation -->
+        <div class="search-section">
+            <button class="button hide-show" onclick="toggleTableVisibility()">Hide/Show Table</button>
+            <input type="text" id="searchInput" placeholder="Search items">
+            <button class="button info" onclick="searchItems()">Search</button>
+            <input type="date" id="dateInput">
+            <button class="button info" onclick="goToDate()">Go to Date</button>
+        </div>
+
+       <!-- QR Code Scanner Section -->
+    <div id="barcodeScanner">
+        <h3>QR Code Scanner</h3>
+        <button onclick="triggerCamera()">Open Camera to Scan QR Code</button>
+        <input type="text" id="searchQrInput" placeholder="Enter QR Code to search">
+        <button onclick="searchByQrCode()">Search</button>
+    </div>
+            <div class="qr-code-actions">
+                <button onclick="printQrCodes()">Print QR Codes</button>
+            </div>
+            
+        <!-- Inventory Table -->
+        <div id="tableWrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Date/Time Added</th>
+                        <th>Cost Price (₦)</th>
+                        <th>Selling Price (₦)</th>
+                        <th>Quantity</th>
+                        <th>Profit (₦)</th>
+                        <th>Barcode</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="itemTableBody">
+                    <!-- New items will be inserted here -->
+                </tbody>
+            </table>            
+            <div id="pagination"></div>
+            <button id="prevPage" onclick="prevPage()">Previous</button>
+            <button id="nextPage" onclick="nextPage()">Next</button>
+        </div>
+
+        <!-- Sales Management Section -->
+        <div class="sales-report-section">
+            <h3>Sales Management</h3>
+            <button onclick="sendDailySalesReport()">Send Daily Sales Report</button>
+            <button onclick="viewReceiptWithIndex()">View/Send Receipt</button>
+ 
+        </div>
+    </div>
+
+    <!-- Script References -->
+     
+    <script src="./qrscript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script src="myscript.js"></script>
+</body>
+</html>
