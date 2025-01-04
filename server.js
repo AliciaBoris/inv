@@ -7,8 +7,8 @@ const PORT = 3000;
 
 // 🛑 Add CORS Middleware Before Any Routes
 app.use(cors({
-    origin: "http://127.0.0.1:3000",  // Allow frontend to access backend
-    methods: ["GET", "POST"],
+    origin: ["http://127.0.0.1:3000", "http://localhost:3000", "https://aliciaboris.github.io"], 
+    methods: ["GET", "POST", "DELETE"], 
     allowedHeaders: ["Content-Type"]
 }));
 
