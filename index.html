@@ -42,10 +42,7 @@
                 <input type="number" id="itemQuantity" placeholder="Quantity">
                 
                 <!-- QR Code Input Field -->
-                <input type="text" id="barcodeInput" placeholder="Scan or Generate QR Code" readonly>
-            
-                <!-- Generate QR Code Button -->
-                <button type="button" onclick="generateAndDisplayQrCode()">Generate QR Code</button>
+                <input type="text" id="barcodeInput" placeholder="Scan or Generate QR Code" readonly>         
                 
                 <!-- Add Item Button -->
                 <button type="button" onclick="addItem()">Add Item</button>
@@ -72,8 +69,23 @@
     </div>
             <div class="qr-code-actions">
                 <button onclick="printQrCodes()">Print QR Codes</button>
+
             </div>
-            
+            <div>
+                <button onclick="openMultiSalePopup()">Sell Multiple Items</button>
+
+                <!-- Multi-Sale Selection Modal -->
+                <div id="multiSaleModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <h3>Select Items for Sale</h3>
+                        <input type="text" id="qrSaleInput" placeholder="Scan QR Code" oninput="addItemByQrCode()" />
+                        <ul id="multiSaleItemList"></ul>
+                        <button onclick="processMultiSale()">Confirm Sale</button>
+                        <button onclick="closeMultiSalePopup()">Cancel</button>
+                    </div>
+                </div>
+            </div>       
+          
         <!-- Inventory Table -->
         <div id="tableWrapper">
             <table>
