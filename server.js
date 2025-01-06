@@ -1,14 +1,14 @@
 const express = require("express");
-const cors = require("cors");
 const mysql2 = require("mysql2");
+const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 // 🛑 Add CORS Middleware Before Any Routes
 app.use(cors({
-    origin: ["http://127.0.0.1:3000", "http://localhost:3000", "https://aliciaboris.github.io"], 
-    methods: ["GET", "POST", "DELETE"], 
+    origin: "*",  // Allow all origins
+    methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type"]
 }));
 
@@ -59,6 +59,26 @@ app.get("/api/items", (req, res) => {
             return res.status(500).json({ error: "Database error" });
         }
         res.json(results); // Send JSON response with inventory items
+    });
+});
+
+app.post("/api/sell-multiple-items", (req, res) => {
+    const sales = req.body.sales; // List of sold items
+
+    if (!sales || sales.length === 0) {
+        return res.status(400).json({ error: "No items to sell." });
+    }
+
+    let queries = sales.map(sale => {
+        return `CALL SellItem('${sale.itemName}', ${sale.quantityToSell})`;
+    }).join("; ");
+
+    db.query(queries, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Database error" });
+        }
+        res.json({ message: "Items sold successfully!" });
     });
 });
 
@@ -114,7 +134,11 @@ app.post("/api/sales", (req, res) => {
 });
 
 app.delete("/api/delete-item/:barcode", (req, res) => {
-    const { barcode } = req.params;
+    let { barcode } = req.params;
+
+    if (!barcode || barcode.toLowerCase() === "null") {
+        return res.status(400).json({ error: "Invalid barcode. Cannot delete item without a barcode." });
+    }
 
     const query = "DELETE FROM Items WHERE Barcode = ?";
     db.query(query, [barcode], (err, result) => {
@@ -124,6 +148,11 @@ app.delete("/api/delete-item/:barcode", (req, res) => {
         }
         res.json({ message: "Item deleted successfully." });
     });
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
 
 
