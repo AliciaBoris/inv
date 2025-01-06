@@ -41,7 +41,7 @@ window.onload = function() {
 };
 
 function fetchInventory() {
-    fetch("http://localhost:3000/api/items") // Fetch data from backend
+    fetch("http://localhost:4000/api/items") // Fetch data from backend
         .then(response => response.json())
         .then(data => {
             inventory = data; // Store fetched items in the inventory array
@@ -182,7 +182,7 @@ function addItem() {
         return;
     }
 
-    fetch("http://localhost:3000/api/add-item", {
+    fetch("http://localhost:4000/api/add-item", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -201,12 +201,8 @@ function addItem() {
             alert("Item added successfully!");
             fetchInventory(); // Refresh table after adding new item
 
-            // Clear form and QR code input
-            document.getElementById("barcodeInput").value = "";
-            document.getElementById("itemName").value = "";
-            document.getElementById("itemCostPrice").value = "";
-            document.getElementById("itemSellingPrice").value = "";
-            document.getElementById("itemQuantity").value = "";
+            // ✅ Clear form after adding item
+            document.getElementById("itemForm").reset();
         })
         .catch(error => {
             console.error("Error adding item:", error);
@@ -246,7 +242,7 @@ function addItem() {
     const sellingPrice = parseFloat(document.getElementById("itemSellingPrice").value);
     const quantity = parseInt(document.getElementById("itemQuantity").value);
     
-    fetch("http://localhost:3000/api/add-item", {
+    fetch("http://localhost:4000/api/add-item", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -270,13 +266,6 @@ function addItem() {
             alert("Failed to add item.");
         });
 
-    labelCode.textContent = qrCodeText;
-
-    qrCodeCell.appendChild(qrCanvas);
-    qrCodeCell.appendChild(labelName);
-    qrCodeCell.appendChild(labelCode);
-
-    table.appendChild(row);
 
     // Update summary
     totalQuantity += itemQuantity;
@@ -330,7 +319,7 @@ function sellItem(button) {
         document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
         document.getElementById('totalInventoryCost').textContent = `₦${totalInventoryCost.toFixed(2)}`;
         document.getElementById('totalQuantity').textContent = totalQuantity;
-        fetch("http://localhost:3000/api/add-item", {
+        fetch("http://localhost:4000/api/add-item", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -362,30 +351,7 @@ function sellItem(button) {
         row.remove();
     }
 }
-function saveSale(itemName, quantity, totalProfit) {
-    fetch("http://localhost:3000/api/sales", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            item_name: itemName,
-            quantity: quantity,
-            total_profit: totalProfit,
-        }),
-    })
-        .then((response) => {
-            if (response.ok) {
-                alert("Sale saved successfully.");
-            } else {
-                response.text().then((text) => alert("Error: " + text));
-            }
-        })
-        .catch((error) => {
-            console.error("Fetch error:", error);
-            alert("Failed to save sale.");
-        });
-}
+
 
 // Function to view receipt for a specific sale
 function viewReceiptForSale(itemName, quantitySold, profit) {
@@ -406,6 +372,151 @@ function viewReceiptForSale(itemName, quantitySold, profit) {
         <body>${receiptContent}</body>
         </html>
     `);
+    receiptWindow.document.close();
+}
+
+function openMultiSalePopup() {
+    const modal = document.getElementById("multiSaleModal");
+    if (modal) {
+        modal.style.display = "block";
+        selectedItemsForSale = [];
+        document.getElementById("multiSaleItemList").innerHTML = "";
+    } else {
+        console.error("Error: multiSaleModal element not found.");
+    }
+}
+    
+    function closeMultiSalePopup() {
+        document.getElementById("multiSaleModal").style.display = "none";
+    }
+    
+    // Manually select item for sale
+    function addItemToSale(itemName, barcode, price) {
+        selectedItemsForSale.push({ itemName, barcode, price, quantity: 1 });
+        updateMultiSaleList();
+    }
+    
+    // Scan QR code to add item
+    function addItemByQrCode() {
+        let scannedQrCode = document.getElementById("qrSaleInput").value.trim();
+        let item = inventory.find(i => i.Barcode === scannedQrCode);
+        if (item && !selectedItemsForSale.some(i => i.barcode === scannedQrCode)) {
+            selectedItemsForSale.push({ 
+                itemName: item.ItemName, 
+                barcode: item.Barcode, 
+                price: item.SellingPrice, 
+                quantity: 1 
+            });
+            updateMultiSaleList();
+        }}
+
+    
+    // Update the displayed selection list
+    function updateMultiSaleList() {
+        let list = document.getElementById("multiSaleItemList");
+        list.innerHTML = "";
+        selectedItemsForSale.forEach((item, index) => {
+            list.innerHTML += `
+                <li>
+                    ${item.itemName} - ₦${item.price.toLocaleString()} 
+                    <input type="number" min="1" value="${item.quantity}" 
+                        onchange="updateItemQuantity(${index}, this.value)" />
+                    <button onclick="removeItemFromSale(${index})">Remove</button>
+                </li>`;
+        });
+    }
+
+    // Change item quantity
+    function updateItemQuantity(index, newQuantity) {
+        selectedItemsForSale[index].quantity = parseInt(newQuantity);
+    }
+    
+    // Remove item from selection
+    function removeItemFromSale(index) {
+        selectedItemsForSale.splice(index, 1);
+        updateMultiSaleList();
+    }
+
+function processMultiSale() {
+    if (selectedItemsForSale.length === 0) {
+        alert("No items selected for sale.");
+        return;
+    }
+
+    fetch("http://localhost:3000/api/sell-multiple-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sales: selectedItemsForSale })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert("Sale completed successfully!");
+        closeMultiSalePopup();
+        generateReceiptForMultipleSales(selectedItemsForSale);
+        fetchInventory(); // Refresh inventory table
+    })
+    .catch(error => {
+        console.error("Error processing sale:", error);
+        alert("Failed to process sale.");
+    });
+}
+
+function generateReceiptForMultipleSales(sales) {
+    const saleDate = new Date().toLocaleString();
+    
+    let receiptContent = `
+        <html>
+        <head>
+            <title>Receipt</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                .receipt { border: 2px solid #000; padding: 20px; width: 350px; margin: auto; }
+                .receipt h2 { margin-bottom: 10px; }
+                .qr-code { margin-top: 10px; }
+                table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+                th, td { border: 1px solid black; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <h2>Clairdot Inventory</h2>
+                <p><strong>Date:</strong> ${saleDate}</p>
+                <table>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>`;
+
+    let totalAmount = 0;
+
+    sales.forEach(sale => {
+        totalAmount += sale.price * sale.quantity;
+        receiptContent += `
+                    <tr>
+                        <td>${sale.itemName}</td>
+                        <td>${sale.quantity}</td>
+                        <td>₦${sale.price.toLocaleString()}</td>
+                        <td>₦${(sale.price * sale.quantity).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="qr-code"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${sale.barcode}" /></td>
+                    </tr>`;
+    });
+
+    receiptContent += `
+                    <tr>
+                        <td colspan="3"><strong>Total Amount:</strong></td>
+                        <td><strong>₦${totalAmount.toLocaleString()}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </body>
+        </html>`;
+
+    const receiptWindow = window.open("", "_blank");
+    receiptWindow.document.write(receiptContent);
     receiptWindow.document.close();
 }
 
@@ -438,23 +549,28 @@ function updateItem(button) {
             totalQuantity += parseInt(item.Quantity);
         });
     
-        document.getElementById("totalProfit").textContent = `₦${totalProfit.toFixed(2)}`;
-        document.getElementById("totalInventoryCost").textContent = `₦${totalInventoryCost.toFixed(2)}`;
-        document.getElementById("totalQuantity").textContent = totalQuantity;
+        document.getElementById("totalProfit").textContent = `₦${totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+        document.getElementById("totalInventoryCost").textContent = `₦${totalInventoryCost.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+        document.getElementById("totalQuantity").textContent = totalQuantity.toLocaleString();
     }
     
 }
 
 function deleteItem(button) {
     const row = button.closest("tr");
-    const barcode = row.cells[6].textContent; // Get barcode from table
+    let barcode = row.cells[6].textContent; // Get barcode from table
+
+    if (!barcode || barcode.toLowerCase() === "null") {
+        alert("Cannot delete item without a valid barcode.");
+        return;
+    }
 
     if (!confirm("Are you sure you want to delete this item?")) return;
 
-    fetch(`http://localhost:3000/api/delete-item/${barcode}`, {
+    fetch(`http://localhost:4000/api/delete-item/${barcode}`, {
         method: "DELETE",
     })
-        .then((response) => response.json())
+        .then(response => response.json())
         .then((data) => {
             alert(data.message);
             fetchInventory(); // Refresh table after deleting item
@@ -464,7 +580,6 @@ function deleteItem(button) {
             alert("Failed to delete item.");
         });
 }
-
 
 function updateSummary() {
     document.getElementById('totalProfit').textContent = `₦${totalProfit.toFixed(2)}`;
@@ -670,6 +785,65 @@ function generateReceipt(itemName, barcode, quantitySold, profit) {
     `);
     receiptWindow.document.close();
     receiptWindow.print();
+}
+
+function generateReceiptForMultipleSales(sales) {
+    const saleDate = new Date().toLocaleString();
+    
+    let receiptContent = `
+        <html>
+        <head>
+            <title>Receipt</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                .receipt { border: 2px solid #000; padding: 20px; width: 350px; margin: auto; }
+                .receipt h2 { margin-bottom: 10px; }
+                .qr-code { margin-top: 10px; }
+                table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+                th, td { border: 1px solid black; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <h2>Clairdot Inventory</h2>
+                <p><strong>Date:</strong> ${saleDate}</p>
+                <table>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>`;
+
+    let totalAmount = 0;
+
+    sales.forEach(sale => {
+        totalAmount += sale.totalAmount;
+        receiptContent += `
+                    <tr>
+                        <td>${sale.itemName}</td>
+                        <td>${sale.quantityToSell}</td>
+                        <td>₦${sale.sellingPrice.toLocaleString()}</td>
+                        <td>₦${sale.totalAmount.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="qr-code"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${sale.barcode}" /></td>
+                    </tr>`;
+    });
+
+    receiptContent += `
+                    <tr>
+                        <td colspan="3"><strong>Total Amount:</strong></td>
+                        <td><strong>₦${totalAmount.toLocaleString()}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </body>
+        </html>`;
+
+    const receiptWindow = window.open("", "_blank");
+    receiptWindow.document.write(receiptContent);
+    receiptWindow.document.close();
 }
 
 function toggleTableVisibility() {
